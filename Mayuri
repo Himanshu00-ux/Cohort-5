@@ -1,0 +1,29 @@
+int btnBJP = 2;
+int btnJDS = 3;
+int btnCONG = 4;
+int voteBJP = 0;
+int voteJDS = 0;
+int voteCONG = 0;
+void setup() {
+pinMode(btnBJP, INPUT_PULLUP);
+pinMode(btnJDS, INPUT_PULLUP);
+pinMode(btnCONG, INPUT_PULLUP);
+Serial.begin(9600);
+}
+void loop() {
+if (digitalRead(btnBJP) == LOW) {
+voteBJP++;
+Serial.println("BJP Voted");
+delay(500);
+}
+if (digitalRead(btnJDS) == LOW) {
+voteJDS++;
+Serial.println("JDS Voted");
+delay(500);
+}
+  if (digitalRead(btnCONG) == LOW) {
+    voteCONG++;
+    Serial.println("CONG Voted");
+    delay(500);
+  }
+}
