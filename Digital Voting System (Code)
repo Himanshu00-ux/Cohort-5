@@ -1,0 +1,280 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Keypad.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// ====== PIN DEFINITIONS ======
+int btnBJP = 2;
+int btnJDS = 3;
+int btnCONG = 4;
+
+int ledBJP = 8;
+int ledJDS = 9;
+int ledCONG = 10;
+
+int buzzer = 11;
+
+// ====== VARIABLES ======
+int voteBJP = 0;
+int voteJDS = 0;
+int voteCONG = 0;
+
+bool votingEnded = false;
+bool systemLocked = false;
+
+unsigned long startTime;
+const unsigned long votingTime = 10000;
+
+// PASSWORD
+String correctPassword = "1234";
+String enteredPassword = "";
+
+// ====== KEYPAD ======
+const byte ROWS = 4;
+const byte COLS = 4;
+
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+byte rowPins[ROWS] = {13,12,7,6};
+byte colPins[COLS] = {5,A0,A1,A2};
+
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+// ==================================================
+
+void setup() {
+
+  pinMode(btnBJP, INPUT_PULLUP);
+  pinMode(btnJDS, INPUT_PULLUP);
+  pinMode(btnCONG, INPUT_PULLUP);
+
+  pinMode(ledBJP, OUTPUT);
+  pinMode(ledJDS, OUTPUT);
+  pinMode(ledCONG, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+
+  lcd.init();
+  lcd.backlight();
+
+  lcd.print("Voting System");
+  delay(2000);
+  lcd.clear();
+
+  startTime = millis();
+}
+
+// ==================================================
+
+void loop() {
+
+  char key = keypad.getKey();
+  if (key) handleKeypad(key);
+
+  if (!votingEnded && !systemLocked) {
+    handleVoting();
+  }
+}
+
+// ================= DISPLAY TIMER ONLY =================
+
+void showTimer(int remaining) {
+  lcd.setCursor(0,0);
+  lcd.print("Time:");
+  lcd.print(remaining);
+  lcd.print("s   ");
+
+  lcd.setCursor(0,1);
+  lcd.print("Voting Running   ");
+}
+
+// ================= VOTING =================
+
+void handleVoting() {
+
+  unsigned long elapsed = millis() - startTime;
+
+  if (elapsed >= votingTime)
+    startTime = millis();
+
+  int remaining = (votingTime - (millis() - startTime)) / 1000;
+
+  showTimer(remaining);
+
+  if (digitalRead(btnBJP) == LOW) {
+    voteBJP++;
+    voteAction("BJP", ledBJP);
+  }
+
+  if (digitalRead(btnJDS) == LOW) {
+    voteJDS++;
+    voteAction("JDS", ledJDS);
+  }
+
+  if (digitalRead(btnCONG) == LOW) {
+    voteCONG++;
+    voteAction("CONG", ledCONG);
+  }
+}
+
+void voteAction(String party, int ledPin) {
+
+  digitalWrite(ledPin, HIGH);
+  digitalWrite(buzzer, HIGH);
+
+  lcd.clear();
+  lcd.print(party);
+  lcd.setCursor(0,1);
+  lcd.print("Voted Thank You");
+
+  delay(800);
+
+  digitalWrite(ledPin, LOW);
+  digitalWrite(buzzer, LOW);
+
+  startTime = millis();
+  lcd.clear();
+}
+
+// ================= KEYPAD =================
+
+void handleKeypad(char key) {
+
+  if (key == '#') {
+    votingEnded = true;
+    lcd.clear();
+    lcd.print("Voting Ended");
+    delay(1500);
+    lcd.clear();
+  }
+
+  else if (key == 'A') {
+    showVotes();
+  }
+
+  else if (key == 'C') {
+    startNewRound();
+  }
+
+  else if (key == 'D') {
+    if (!systemLocked) {
+      systemLocked = true;
+      lcd.clear();
+      lcd.print("System Locked");
+      delay(1500);
+      lcd.clear();
+    } else {
+      requestPassword('D');
+    }
+  }
+
+  else if (key == '*' || key == 'B') {
+    requestPassword(key);
+  }
+}
+
+// ================= PASSWORD =================
+
+void requestPassword(char actionKey) {
+
+  enteredPassword = "";
+  lcd.clear();
+  lcd.print("Enter Password:");
+
+  while (enteredPassword.length() < 4) {
+    char k = keypad.getKey();
+    if (k && isDigit(k)) {
+      enteredPassword += k;
+      lcd.setCursor(enteredPassword.length()-1,1);
+      lcd.print("*");
+    }
+  }
+
+  delay(500);
+
+  if (enteredPassword == correctPassword) {
+
+    lcd.clear();
+    lcd.print("Access Granted");
+    delay(1000);
+
+    if (actionKey == '*') showWinner();
+    else if (actionKey == 'B') resetVotes();
+    else if (actionKey == 'D') {
+      systemLocked = false;
+      lcd.clear();
+      lcd.print("System Unlocked");
+      delay(1500);
+      lcd.clear();
+    }
+  }
+  else {
+    lcd.clear();
+    lcd.print("Wrong Password");
+    delay(1500);
+    lcd.clear();
+  }
+}
+
+// ================= ADMIN FUNCTIONS =================
+
+void showVotes() {
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print("B:");
+  lcd.print(voteBJP);
+  lcd.print(" J:");
+  lcd.print(voteJDS);
+  lcd.setCursor(0,1);
+  lcd.print("C:");
+  lcd.print(voteCONG);
+  delay(3000);
+  lcd.clear();
+}
+
+void showWinner() {
+
+  lcd.clear();
+
+  if (voteBJP > voteJDS && voteBJP > voteCONG)
+    lcd.print("Winner: BJP");
+  else if (voteJDS > voteBJP && voteJDS > voteCONG)
+    lcd.print("Winner: JDS");
+  else if (voteCONG > voteBJP && voteCONG > voteJDS)
+    lcd.print("Winner: CONG");
+  else
+    lcd.print("Result: TIE");
+
+  delay(3000);
+  lcd.clear();
+}
+
+void resetVotes() {
+  voteBJP = 0;
+  voteJDS = 0;
+  voteCONG = 0;
+
+  lcd.clear();
+  lcd.print("Votes Reset");
+  delay(1500);
+  lcd.clear();
+}
+
+void startNewRound() {
+  votingEnded = false;
+  systemLocked = false;
+  voteBJP = 0;
+  voteJDS = 0;
+  voteCONG = 0;
+  startTime = millis();
+
+  lcd.clear();
+  lcd.print("New Round");
+  delay(1500);
+  lcd.clear();
+}
