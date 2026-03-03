@@ -1,0 +1,173 @@
+
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <Keypad.h>
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+// ===== BUTTONS =====
+int btnBJP = 2;
+int btnJDS = 3;
+int btnCONG = 4;
+
+// ===== LEDS =====
+int ledBJP = 8;
+int ledJDS = 9;
+int ledCONG = 10;
+
+// ===== BUZZER =====
+int buzzer = 11;
+
+// ===== VOTES =====
+int voteBJP = 0;
+int voteJDS = 0;
+int voteCONG = 0;
+
+bool votingEnded = false;
+
+// ===== TIMER =====
+unsigned long startTime;
+const unsigned long votingTime = 10000; // 10 seconds
+
+// ===== KEYPAD =====
+const byte ROWS = 4;
+const byte COLS = 4;
+
+char keys[ROWS][COLS] = {
+  {'1','2','3','A'},
+  {'4','5','6','B'},
+  {'7','8','9','C'},
+  {'*','0','#','D'}
+};
+
+byte rowPins[ROWS] = {13,12,7,6};
+byte colPins[COLS] = {5,A0,A1,A2};
+
+Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
+void setup() {
+
+  pinMode(btnBJP, INPUT_PULLUP);
+  pinMode(btnJDS, INPUT_PULLUP);
+  pinMode(btnCONG, INPUT_PULLUP);
+
+  pinMode(ledBJP, OUTPUT);
+  pinMode(ledJDS, OUTPUT);
+  pinMode(ledCONG, OUTPUT);
+
+  pinMode(buzzer, OUTPUT);
+
+  lcd.init();
+  lcd.backlight();
+
+  lcd.print("Voting Started");
+  delay(2000);
+  lcd.clear();
+
+  startTime = millis();
+}
+
+void loop() {
+
+  char key = keypad.getKey();
+
+  if (key == '#') {
+    votingEnded = true;
+
+    lcd.clear();
+    lcd.print("Voting Ended");
+    delay(2000);
+    lcd.clear();
+
+    showWinner();
+  }
+
+  if (key == 'B') {
+    resetVotes();
+  }
+
+  if (!votingEnded) {
+
+    // ===== TIMER =====
+    unsigned long elapsed = millis() - startTime;
+
+    if (elapsed >= votingTime) {
+      startTime = millis();
+    }
+
+    int remaining = (votingTime - (millis() - startTime)) / 1000;
+
+    lcd.setCursor(0,0);
+    lcd.print("Time:");
+    lcd.print(remaining);
+    lcd.print("s   ");
+
+    lcd.setCursor(0,1);
+    lcd.print("Voting Running  ");
+
+    // ===== VOTING =====
+    if (digitalRead(btnBJP) == LOW) {
+      voteBJP++;
+      voteAction(ledBJP);
+    }
+
+    if (digitalRead(btnJDS) == LOW) {
+      voteJDS++;
+      voteAction(ledJDS);
+    }
+
+    if (digitalRead(btnCONG) == LOW) {
+      voteCONG++;
+      voteAction(ledCONG);
+    }
+  }
+}
+
+// ===== Vote Action =====
+void voteAction(int ledPin) {
+
+  digitalWrite(ledPin, HIGH);
+  digitalWrite(buzzer, HIGH);
+
+  delay(300);
+
+  digitalWrite(ledPin, LOW);
+  digitalWrite(buzzer, LOW);
+
+  delay(500);
+
+  startTime = millis();  // reset timer after vote
+}
+
+// ===== Winner =====
+void showWinner() {
+
+  lcd.clear();
+
+  if (voteBJP > voteJDS && voteBJP > voteCONG)
+    lcd.print("Winner: BJP");
+  else if (voteJDS > voteBJP && voteJDS > voteCONG)
+    lcd.print("Winner: JDS");
+  else if (voteCONG > voteBJP && voteCONG > voteJDS)
+    lcd.print("Winner: CONG");
+  else
+    lcd.print("Result: TIE");
+
+  delay(3000);
+  lcd.clear();
+}
+
+// ===== Reset =====
+void resetVotes() {
+
+  voteBJP = 0;
+  voteJDS = 0;
+  voteCONG = 0;
+  votingEnded = false;
+  startTime = millis();
+
+  lcd.clear();
+  lcd.print("Votes Reset");
+  delay(2000);
+  lcd.clear();
+}
