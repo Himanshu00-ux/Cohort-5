@@ -1,0 +1,68 @@
+int btnBJP = 2;
+int btnJDS = 3;
+int btnCONG = 4;
+
+int voteBJP = 0;
+int voteJDS = 0;
+int voteCONG = 0;
+
+int builtInLED = 13;   // Arduino built-in LED
+
+void setup() {
+
+  pinMode(btnBJP, INPUT_PULLUP);
+  pinMode(btnJDS, INPUT_PULLUP);
+  pinMode(btnCONG, INPUT_PULLUP);
+
+  pinMode(builtInLED, OUTPUT);
+
+  Serial.begin(9600);
+  Serial.println("Voting System Started");
+}
+
+void loop() {
+
+  // ===== BJP =====
+  if (digitalRead(btnBJP) == LOW) {
+    voteBJP++;
+
+    digitalWrite(builtInLED, HIGH);   // LED ON
+
+    Serial.print("BJP Votes: ");
+    Serial.println(voteBJP);
+
+    delay(300);
+
+    digitalWrite(builtInLED, LOW);    // LED OFF
+    delay(500);
+  }
+
+  // ===== JDS =====
+  if (digitalRead(btnJDS) == LOW) {
+    voteJDS++;
+
+    digitalWrite(builtInLED, HIGH);
+
+    Serial.print("JDS Votes: ");
+    Serial.println(voteJDS);
+
+    delay(300);
+
+    digitalWrite(builtInLED, LOW);
+    delay(500);
+  }
+
+  // ===== CONG =====
+  if (digitalRead(btnCONG) == LOW) {
+    voteCONG++;
+
+    digitalWrite(builtInLED, HIGH);
+
+    Serial.print("CONG Votes: ");
+    Serial.println(voteCONG);
+
+    delay(300);
+
+    digitalWrite(builtInLED, LOW);
+    delay(500);
+  }
