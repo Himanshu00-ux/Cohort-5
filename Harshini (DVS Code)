@@ -1,0 +1,58 @@
+Code (Basic Voting + 3 LEDs + Serial Monitor)
+int btnBJP = 2;
+int btnJDS = 3;
+int btnCONG = 4;
+int ledBJP = 8;    // RED LED
+int ledJDS = 9;    // GREEN LED
+int ledCONG = 10;  // YELLOW LED
+int voteBJP = 0;
+int voteJDS = 0;
+int voteCONG = 0;
+void setup() {
+  pinMode(btnBJP, INPUT_PULLUP);
+  pinMode(btnJDS, INPUT_PULLUP);
+  pinMode(btnCONG, INPUT_PULLUP);
+  pinMode(ledBJP, OUTPUT);
+  pinMode(ledJDS, OUTPUT);
+  pinMode(ledCONG, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Voting System Started");
+}
+void loop() {
+  // ===== BJP =====
+  if (digitalRead(btnBJP) == LOW) {
+    voteBJP++;
+    digitalWrite(ledBJP, HIGH);
+    Serial.print("BJP Votes: ");
+    Serial.println(voteBJP);
+    delay(300);
+    digitalWrite(ledBJP, LOW);
+    delay(500);
+  }
+  // ===== JDS =====
+  if (digitalRead(btnJDS) == LOW) {
+    voteJDS++;
+    digitalWrite(ledJDS, HIGH);
+    Serial.print("JDS Votes: ");
+    Serial.println(voteJDS);
+    delay(300);
+    digitalWrite(ledJDS, LOW);
+    delay(500);
+  }
+  // ===== CONG =====
+  if (digitalRead(btnCONG) == LOW) {
+    voteCONG++;
+    digitalWrite(ledCONG, HIGH);
+    Serial.print("CONG Votes: ");
+    Serial.println(voteCONG);
+    delay(300);
+    digitalWrite(ledCONG, LOW);
+    delay(500);
+  }
+}
+
+
+Adds:
+	•	LED for each party
+	•	LED glows when vote cast
+Improvement: Visual confirmation.
