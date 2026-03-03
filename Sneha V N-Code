@@ -1,0 +1,62 @@
+//Adds:
+//	•	Buzzer beep when vote cast
+//Improvement: Audio confirmation 
+//Code : Added Buzzer confirmation with LED + Serial display
+int btnBJP = 2;
+int btnJDS = 3;
+int btnCONG = 4;
+int ledBJP = 8;
+int ledJDS = 9;
+int ledCONG = 10;
+int buzzer = 11;
+int voteBJP = 0;
+int voteJDS = 0;
+int voteCONG = 0;
+void setup() {
+  pinMode(btnBJP, INPUT_PULLUP);
+  pinMode(btnJDS, INPUT_PULLUP);
+  pinMode(btnCONG, INPUT_PULLUP);
+  pinMode(ledBJP, OUTPUT);
+  pinMode(ledJDS, OUTPUT);
+  pinMode(ledCONG, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+  Serial.begin(9600);
+  Serial.println("Voting System Started");
+}
+void loop() {
+  if (digitalRead(btnBJP) == LOW) {
+    voteBJP++;
+    digitalWrite(ledBJP, HIGH);
+    digitalWrite(buzzer, HIGH);
+    Serial.print("BJP Votes: ");
+    Serial.println(voteBJP);
+    delay(300);
+    digitalWrite(ledBJP, LOW);
+    digitalWrite(buzzer, LOW);
+    delay(500);
+  }
+  if (digitalRead(btnJDS) == LOW) {
+    voteJDS++;
+    digitalWrite(ledJDS, HIGH);
+    digitalWrite(buzzer, HIGH);
+    Serial.print("JDS Votes: ");
+    Serial.println(voteJDS);
+    delay(300);
+    digitalWrite(ledJDS, LOW);
+    digitalWrite(buzzer, LOW);
+    delay(500);
+  }
+  if (digitalRead(btnCONG) == LOW) {
+    voteCONG++;
+    digitalWrite(ledCONG, HIGH);
+    digitalWrite(buzzer, HIGH);
+    Serial.print("CONG Votes: ");
+    Serial.println(voteCONG);
+    delay(300);
+    digitalWrite(ledCONG, LOW);
+    digitalWrite(buzzer, LOW);
+    delay(500);
+  }
+}
+
+
